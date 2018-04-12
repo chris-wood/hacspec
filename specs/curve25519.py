@@ -23,7 +23,7 @@ def fsqr(x:felem_t) -> felem_t:
     return felem(x * x)
 
 def fexp(x:felem_t,n:nat) -> felem_t:
-    return felem(pow(x,nat,p25519))
+    return felem(pow(x,n,p25519))
 
 def finv(x:felem_t) -> felem_t:
     return felem(pow(x,p25519-2,p25519))

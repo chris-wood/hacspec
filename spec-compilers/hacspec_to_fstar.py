@@ -65,6 +65,8 @@ def dump(node, annotate_fields=True, include_attributes=False):
            return "length"
         if f == "vlbytes.length":
            return "length"
+        if f == "array.length":
+           return "length"
         if f == "vlarray.split_blocks":
            return "split_blocks"
         if f == "vlbytes.split_blocks":
@@ -100,6 +102,30 @@ def dump(node, annotate_fields=True, include_attributes=False):
         if f == "bytes.from_uint128_le":
            return "uint_to_bytes_le #U128"
         if f == "bytes.from_uint128_be":
+           return "uint_to_bytes_be #U128"
+        if f == "vlbytes.to_uint32s_le":
+           return "uints_from_bytes_le #U32"
+        if f == "vlbytes.from_uint32s_le":
+           return "uints_to_bytes_le #U32"
+        if f == "vlbytes.to_uint32s_be":
+           return "uints_from_bytes_be #U32"
+        if f == "vlbytes.from_uint32s_be":
+           return "uints_to_bytes_be #U32"
+        if f == "vlbytes.to_uint64s_be":
+           return "uints_from_bytes_be #U64"
+        if f == "vlbytes.from_uint64s_le":
+           return "uints_to_bytes_le #U64"
+        if f == "vlbytes.to_uint64s_le":
+           return "uints_from_bytes_le #U64"
+        if f == "vlbytes.from_uint64s_be":
+           return "uints_to_bytes_be #U64"
+        if f == "vlbytes.from_uint64_be":
+           return "uint_to_bytes_be #U64"
+        if f == "vlbytes.to_uint128_le":
+           return "uint_from_bytes_le #U128"
+        if f == "vlbytes.from_uint128_le":
+           return "uint_to_bytes_le #U128"
+        if f == "vlbytes.from_uint128_be":
            return "uint_to_bytes_be #U128"
         if f == "uint32.rotate_left":
            return "rotate_left"
@@ -146,10 +172,11 @@ def dump(node, annotate_fields=True, include_attributes=False):
                     result[x.elts[0].id] = x
                 else:
                     result[x.id] = x
+            return result
         elif isinstance(node, Subscript):
             return {node.value.id}
-        if (isinstance(node, AugAssign) and
-            isinstance(node.target,Subscript)):
+        elif (isinstance(node, AugAssign) and
+              isinstance(node.target,Subscript)):
             return {node.target.value.id}
         elif isinstance(node, AugAssign):
             return {node.target.id}
@@ -185,6 +212,8 @@ def dump(node, annotate_fields=True, include_attributes=False):
             return "%."
         elif isinstance(o,Eq) or isinstance(o,Is):
             return "="
+        elif isinstance(o,NotEq):
+            return "!="
         elif isinstance(o,Gt):
             return ">"
         elif isinstance(o,Lt):
@@ -238,7 +267,24 @@ def dump(node, annotate_fields=True, include_attributes=False):
             nty = vs[0]
             x = node.value.args[1].args.args[0].arg
             b = _format(node.value.args[1].body,False,ind,False)
-            return ("type "+nty+" = "+x+":"+ty+"{"+b+"}\n")
+            return ("let "+nty+" = "+x+":"+ty+"{"+b+"}"+_sep(top))
+        if (isinstance(node, Call) and
+            isinstance(node.func,Name) and
+            node.func.id == 'contract'):
+            ty = node.args[0].id
+            pre = _format(node.args[1].body,False,ind,False)
+            post = _format(node.args[2].body,False,ind,False)
+            return ("Pure "+ty+" (requires ("+pre+")) (ensures ("+post+"))")
+        if (isinstance(node, Assign) and
+            isinstance(node.value,Call) and
+            isinstance(node.value.func,Name) and
+            node.value.func.id == 'refine3'):
+            vs = [_format(x,False,ind,paren) for x in node.targets]
+            ty = node.value.args[0].id
+            nty = vs[0]
+            x = node.value.args[1].args.args[0].arg
+            b = _format(node.value.args[1].body,False,ind,False)
+            return ("let "+nty+" = "+x+":"+ty+"{"+b+"}"+_sep(top))
         if (isinstance(node, Assign) and
             isinstance(node.value,Call) and
             isinstance(node.value.func,Name) and

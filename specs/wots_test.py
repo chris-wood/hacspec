@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from wots import *
-from speclib import *
+from hacspec.speclib import *
 from sys import exit
 
 # Generated with https://github.com/joostrijneveld/xmss-reference/
@@ -49,7 +49,7 @@ def test_wots_kat(m: digest_t, pk: pk_t, sig: sig_t, adr: address_t, seed: seed_
     verify_pk(pk, pk2)
 
 def test_wots_self():
-    adr = array.create_random(8, uint32_t)
+    adr = array.create_random(nat(8), uint32_t)
     seed = bytes.create_random_bytes(n)
     msg = bytes.from_ints([0xFF, 0xFF, 0xFF, 0xFF, 0xFF])
     msg_h = sha256(msg)

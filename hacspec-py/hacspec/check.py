@@ -328,7 +328,12 @@ def read_function_signature(f):
             rt = f.returns.func.id
     decorators = [read(x, fun_name) for x in f.decorator_list]
     # Every function must have a typechecked decorator.
-    if len(decorators) != 1 or decorators[0].get_name() != "typechecked":
+    typechecked = False
+    for decorator in decorators:
+        if isinstance(decorator, AstName) and decorator.get_name() == "typechecked":
+            typechecked = True
+            break
+    if not typechecked:
         print("Every hacpsec function must have a @typechecked decorator: \"" + fun_name+"\"")
         exit(1)
     try:
@@ -387,9 +392,28 @@ def read(node, cl=None):
     # Normal assignments with types in comments
     if isinstance(node, Assign):
         args = [read(t) for t in node.targets]
-        args.append(read(node.value))
+        if len(args) < 1:
+            print("Invalid assign.")
+            exit(1)
+        right = read(node.value)
         if node.type_comment:
             print("Type comments are not supported by hacspec")
+            exit(1)
+        # Check that types are named _t.
+        try:
+            # Types come from _t functions or refine.
+            # Only checking refine for now.
+            fun = right.get_function_signature()
+            if fun.fun_name == "refine":
+                type_name = args[0].get_name()
+                if len(args) != 1 or not type_name.endswith("_t"):
+                    print("Invalid hacspec. " + type_name + " must end with _t.")
+                    exit(1)
+        except:
+            pass
+        args.append(right)
+        if right.t.__name__ == "List":
+            print("\n *** Python lists have to be wrapped in hacspec arrays.\n")
             exit(1)
         return AstItem(Assign, args)
 
@@ -613,10 +637,12 @@ def read_objects(ast, obj):
     mod = ast.body
     if mod is None:
         # ast root has to be Module.
-        return []
+        print("This is not a valid ast3.")
+        exit(1)
     if not isinstance(mod, list):
         # The ast module is a list of nodes.
-        return []
+        print("This is not a valid ast3.")
+        exit(1)
     parsed = read(ast)
     filtered = filter(parsed, obj, obj.__name__)
     return filtered

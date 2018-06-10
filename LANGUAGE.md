@@ -11,13 +11,13 @@ Types t ::= int | bool | str
           | vlarray_t(t)
           | refine(t,pred)
           | bitvector_t(len)
-          | range(min,max)
+          | range_t(min,max)
 
 Derived Types:
-      nat                  := refine(int,lambda x: x >= 0)
-      array_t(t,len)       := refine(vlarray_t(t),lambda x: length(x) == len)
+      nat                  := refine(int, lambda x: x >= 0)
+      array_t(t,len)       := refine(vlarray_t(t), lambda x: length(x) == len)
       vlbytes_t            := vlarray_t(uint8_t)
-      bytes_t(len)         := array_t(uint8_t,len)
+      bytes_t(len)         := vlarray_t(uint8_t, len)
       pfelem_t(prime)      := refine(nat,lambda x: x < prime)
       gfelem_t(len,irred)  := bitvector_t(len)
 
@@ -58,7 +58,7 @@ Statements s ::=
             s		    (for loop)
       | s
         s	          (sequential composition)
-      | from x import x1,x2,...,xn (import from external module)
+      | from x import x1,x2,...,xn (import from other module, only speclib or hacspec)
 ```
 
 ## Conventions
@@ -70,6 +70,8 @@ Hacspecs must adhere to the following coding conventions:
 * Functions can be nested.
 * Classes are not allowed. *(checked)*
 * Only `import from` import statements of local spec files and `speclib` are allowed. *(checked)*
+* Type annotations can be used but are not checked by `hacspec-check` or when running the code. *(maybe not allow)*
+* Type comments are not supported. *(checked)*
 
 ## Library functions
 

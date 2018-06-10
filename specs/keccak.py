@@ -3,14 +3,14 @@ from hacspec.speclib import *
 state_t = array_t(uint64_t, 25)
 index_t = range_t(0, 5)
 max_size_t = 2**64 - 1
-size_nat = refine3(int, lambda x: x <= max_size_t and x >= 0)
-size_nat_200 = refine3(int, lambda x: x <= 200 and x >= 0)
-size_nat_1600 = refine3(int, lambda x: x <= 1600 and x %
-                        8 == 0 and x // 8 > 0 and x >= 0)
+size_nat_t = refine(int, lambda x: x <= max_size_t and x >= 0)
+size_nat_200_t = refine(int, lambda x: x <= 200 and x >= 0)
+size_nat_1600_t = refine(int, lambda x: x <= 1600 and x %
+                          8 == 0 and x // 8 > 0 and x >= 0)
 
 
 @typechecked
-def lfsr86540(lfsr: uint8) -> tuple2(uint8_t, bool):
+def lfsr86540(lfsr: uint8_t) -> tuple2(uint8_t, bool):
     lfsr1 = lfsr & uint8(1)
     result = not (lfsr1 == uint8(0))
     lfsr2 = lfsr << 1
@@ -87,30 +87,30 @@ def state_permute(s: state_t) -> state_t:
 
 
 @typechecked
-def loadState(rateInBytes: size_nat_200,
-              input_b: refine3(vlbytes, lambda x: array.length(x) == rateInBytes),
+def loadState(rateInBytes: size_nat_200_t,
+              input_b: refine(vlbytes_t, lambda x: array.length(x) == rateInBytes),
               s: state_t) -> state_t:
     block = array.create(200, uint8(0))
     block[0:rateInBytes] = input_b
     for j in range(25):
-        nj = vlbytes.to_uint64_le(block[(j * 8):(j * 8 + 8)])
+        nj = vlbytes_t.to_uint64_le(block[(j * 8):(j * 8 + 8)])
         s[j] = s[j] ^ nj
     return s
 
 
 @typechecked
-def storeState(rateInBytes: size_nat_200,
-               s: state_t) -> refine3(vlbytes, lambda x: array.length(x) == rateInBytes):
+def storeState(rateInBytes: size_nat_200_t,
+               s: state_t) -> refine(vlbytes_t, lambda x: array.length(x) == rateInBytes):
     block = bytes(array.create(200, uint8(0)))
     for j in range(25):
-        block[(j * 8):(j * 8 + 8)] = vlbytes.from_uint64_le(s[j])
+        block[(j * 8):(j * 8 + 8)] = vlbytes_t.from_uint64_le(s[j])
     return block[0:rateInBytes]
 
 
 @typechecked
-def absorb(rateInBytes: refine3(nat, lambda x: 0 < x and x <= 200),
-           inputByteLen: size_nat,
-           input_b: refine3(vlbytes, lambda x: array.length(x) == inputByteLen),
+def absorb(rateInBytes: refine(nat, lambda x: 0 < x and x <= 200),
+           inputByteLen: size_nat_t,
+           input_b: refine(vlbytes_t, lambda x: array.length(x) == inputByteLen),
            delimitedSuffix: uint8_t) -> state_t:
     s = array.create(25, uint64(0))
     n = inputByteLen // rateInBytes
@@ -138,8 +138,8 @@ def absorb(rateInBytes: refine3(nat, lambda x: 0 < x and x <= 200),
 
 @typechecked
 def squeeze(s: state_t,
-            rateInBytes: refine3(nat, lambda x: 0 < x and x <= 200),
-            outputByteLen: size_nat) -> refine3(vlbytes, lambda x: array.length(x) == outputByteLen):
+            rateInBytes: refine(nat, lambda x: 0 < x and x <= 200),
+            outputByteLen: size_nat_t) -> refine(vlbytes_t, lambda x: array.length(x) == outputByteLen):
     output = bytes(array.create(outputByteLen, uint8(0)))
     outBlocks = outputByteLen // rateInBytes
     for i in range(outBlocks):
@@ -154,8 +154,8 @@ def squeeze(s: state_t,
 
 
 @typechecked
-def keccak(rate: size_nat_1600, capacity: size_nat, inputByteLen: size_nat,
-           input_b: vlbytes_t, delimitedSuffix: uint8_t, outputByteLen: size_nat) \
+def keccak(rate: size_nat_1600_t, capacity: size_nat_t, inputByteLen: size_nat_t,
+           input_b: vlbytes_t, delimitedSuffix: uint8_t, outputByteLen: size_nat_t) \
     -> contract(vlbytes_t,
                 lambda rate, capacity, inputByteLen, input_b, delimitedSuffix, outputByteLen:
                 capacity +
@@ -169,42 +169,42 @@ def keccak(rate: size_nat_1600, capacity: size_nat, inputByteLen: size_nat,
 
 
 @typechecked
-def shake128(inputByteLen: size_nat,
-             input_b: refine3(vlbytes, lambda x: array.length(x) == inputByteLen),
-             outputByteLen: size_nat) -> refine3(vlbytes, lambda x: array.length(x) == outputByteLen):
+def shake128(inputByteLen: size_nat_t,
+             input_b: refine(vlbytes_t, lambda x: array.length(x) == inputByteLen),
+             outputByteLen: size_nat_t) -> refine(vlbytes_t, lambda x: array.length(x) == outputByteLen):
     return keccak(1344, 256, inputByteLen, input_b, uint8(0x1F), outputByteLen)
 
 
 @typechecked
-def shake256(inputByteLen: size_nat,
-             input_b: refine3(vlbytes, lambda x: array.length(x) == inputByteLen),
-             outputByteLen: size_nat) -> refine3(vlbytes, lambda x: array.length(x) == outputByteLen):
+def shake256(inputByteLen: size_nat_t,
+             input_b: refine(vlbytes_t, lambda x: array.length(x) == inputByteLen),
+             outputByteLen: size_nat_t) -> refine(vlbytes_t, lambda x: array.length(x) == outputByteLen):
     return keccak(1088, 512, inputByteLen, input_b, uint8(0x1F), outputByteLen)
 
 
 @typechecked
-def sha3_224(inputByteLen: size_nat,
-             input_b: refine3(vlbytes, lambda x: array.length(x) == inputByteLen)) -> \
-        refine3(vlbytes, lambda x: array.length(x) == 28):
+def sha3_224(inputByteLen: size_nat_t,
+             input_b: refine(vlbytes_t, lambda x: array.length(x) == inputByteLen)) -> \
+        refine(vlbytes_t, lambda x: array.length(x) == 28):
     return keccak(1152, 448, inputByteLen, input_b, uint8(0x06), 28)
 
 
 @typechecked
-def sha3_256(inputByteLen: size_nat,
-             input_b: refine3(vlbytes, lambda x: array.length(x) == inputByteLen)) -> \
-        refine3(vlbytes, lambda x: array.length(x) == 32):
+def sha3_256(inputByteLen: size_nat_t,
+             input_b: refine(vlbytes_t, lambda x: array.length(x) == inputByteLen)) -> \
+        refine(vlbytes_t, lambda x: array.length(x) == 32):
     return keccak(1088, 512, inputByteLen, input_b, uint8(0x06), 32)
 
 
 @typechecked
-def sha3_384(inputByteLen: size_nat,
-             input_b: refine3(vlbytes, lambda x: array.length(x) == inputByteLen)) -> \
-        refine3(vlbytes, lambda x: array.length(x) == 48):
+def sha3_384(inputByteLen: size_nat_t,
+             input_b: refine(vlbytes_t, lambda x: array.length(x) == inputByteLen)) -> \
+        refine(vlbytes_t, lambda x: array.length(x) == 48):
     return keccak(832, 768, inputByteLen, input_b, uint8(0x06), 48)
 
 
 @typechecked
-def sha3_512(inputByteLen: size_nat,
-             input_b: refine3(vlbytes, lambda x: array.length(x) == inputByteLen)) -> \
-        refine3(vlbytes, lambda x: array.length(x) == 64):
+def sha3_512(inputByteLen: size_nat_t,
+             input_b: refine(vlbytes_t, lambda x: array.length(x) == inputByteLen)) -> \
+        refine(vlbytes_t, lambda x: array.length(x) == 64):
     return keccak(576, 1024, inputByteLen, input_b, uint8(0x06), 64)

@@ -51,3 +51,7 @@ def map2p384(u:felem_t) -> affine_t:
     x = fadd(x, fmul(fsqr(u), finv(to_felem(3))))
     y = fadd(fmul(u, x), v)
     return (x, y)
+
+inputs = [1, 7, 13, 1<<7, 1<<8, 1<<64, 1<<64-1, prime-1, prime+1]
+for u in inputs:
+    print(u, map2p384(to_felem(u)))

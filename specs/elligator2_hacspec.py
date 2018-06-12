@@ -19,11 +19,7 @@ def map2curve25519(r:felem_t) -> point_t:
     else:
         x = d
 
-    # TODO(caw): implement square root here
-    exp = (fadd(to_felem(p25519), to_felem(1))) // to_felem(4)
-    y = fexp(f_25519(x), exp)
-
-    return (x, y)
+    return x
 
 inputs = [1, 7, 13, 1<<7, 1<<8, 1<<64, 1<<64-1, p25519-1, p25519+1]
 for u in inputs:

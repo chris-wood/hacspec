@@ -17,10 +17,10 @@ def map2p256(t:felem_t) -> affine_t:
     h2 = fadd(fexp(x2, 3), fadd(fmul(a256, x2), b256))
     h3 = fadd(fexp(x3, 3), fadd(fmul(a256, x3), b256))
 
-    exp = (fadd(to_felem(prime), to_felem(-1))) // to_felem(2)
+    exp = fmul(fadd(to_felem(prime), to_felem(-1)), finv(to_felem(2)))
     e = fexp(h2, exp)
 
-    exp = (fadd(to_felem(prime), to_felem(1))) // to_felem(4)
+    exp = to_felem((prime + 1) // 4)
     if e == 1:
     	return (x2, fexp(f_p256(x2), exp))
     else:

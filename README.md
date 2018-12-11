@@ -14,7 +14,7 @@ This project is still in the early stages. We invite submissions of crypto specs
 
 ## compiler
 
-See [spec-compilers](spec-compilers/) for details.
+See [compilers](compilers/) for details.
 
 # How to use
 
@@ -27,8 +27,7 @@ hacspec is distributed as a [pip package](https://pypi.org/project/hacspec/)
 
 To install the hacspec package from its source clone this repository and run
 
-    cd hacspec-py
-    pip install .
+    make -C build install
 
 Now you can use the speclib in your python code with
 
@@ -38,13 +37,21 @@ The package further provides a tool to check hacpsec files for its correctness
 
     hacspec-check <your-hacspec>
 
+See the `example` directory for a spec using the hacspec python package.
+
 ## Development
 
-When working on hacspec itself install the hacspec package in development mode.
+When working on hacspec itself installation is not necessary.
+The makefile has three main targets
 
-    cd hacspec-py
-    pip install -e .
+    make run     // disabled type checker
+    make check   // check hacspec compliance
+    make test    // run tests with type checker enabled
+
+to run or check specs.
 
 # contact
 
 Discussions are happening on the [mailing list](https://moderncrypto.org/mailman/listinfo/hacspec).
+
+Chat with us on [gitter](https://gitter.im/hacspec/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link).
